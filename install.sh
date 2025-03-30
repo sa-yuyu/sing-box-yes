@@ -161,7 +161,7 @@ config_check() {
 
 set_as_entrance() {
     if [[ ! -f "${SCRIPT_FILE_PATH}" ]]; then
-        wget --no-check-certificate -O ${SCRIPT_FILE_PATH} https://raw.githubusercontent.com/FranzKafkaYu/sing-box-yes/main/install.sh
+        wget --no-check-certificate -O ${SCRIPT_FILE_PATH} https://raw.githubusercontent.com/sa-yuyu/sing-box-yes/main/install.sh
         chmod +x ${SCRIPT_FILE_PATH}
     fi
 }
@@ -299,7 +299,7 @@ download_config() {
         mkdir -p ${CONFIG_FILE_PATH}
     fi
     if [[ ! -f "${CONFIG_FILE_PATH}/config.json" ]]; then
-        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://raw.githubusercontent.com/FranzKafkaYu/sing-box-yes/main/shadowsocks2022/server_config.json
+        wget --no-check-certificate -O ${CONFIG_FILE_PATH}/config.json https://raw.githubusercontent.com/sa-yuyu/sing-box-yes/main/shadowsocks2022/server_config.json
         if [[ $? -ne 0 ]]; then
             LOGE "下载sing-box配置模板失败,请检查网络"
             exit 1
@@ -438,18 +438,19 @@ install_systemd_service() {
     fi
     cat >${SERVICE_FILE_PATH} <<EOF
 [Unit]
-Description=sing-box Service
-Documentation=https://sing-box.sagernet.org/
-After=network.target nss-lookup.target
-Wants=network.target
+Description=sing-box service
+Documentation=https://sing-box.sagernet.org
+After=network.target nss-lookup.target network-online.target
+
 [Service]
-Type=simple
-ExecStart=${BINARY_FILE_PATH} run -c ${CONFIG_FILE_PATH}/config.json
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+ExecStart=${BINARY_FILE_PATH} -D ${CONFIG_FILE_PATH} run
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
-RestartSec=30s
-RestartPreventExitStatus=23
-LimitNPROC=10000
-LimitNOFILE=1000000
+RestartSec=10s
+LimitNOFILE=infinity
+
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -632,7 +633,7 @@ enable_bbr() {
 
 #for cert issue
 ssl_cert_issue() {
-    bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/BashScripts/main/SSLAutoInstall/SSLAutoInstall.sh)
+    bash <(curl -Ls https://raw.githubusercontent.com/sa-yuyu/BashScripts/main/SSLAutoInstall/SSLAutoInstall.sh)
 }
 
 #show help
